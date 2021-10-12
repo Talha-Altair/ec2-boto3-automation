@@ -97,6 +97,12 @@ def startpy():
 
     instance_id = create_instance(sg_id)
 
+    while True:
+
+        
+
+        break
+
     ip_address = get_public_ip(instance_id)
 
     ssh_command = f"ssh -i {PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem ubuntu@{ip_address}.{AWS_REGION}.compute.amazonaws.com"
