@@ -33,7 +33,7 @@ def create_key_pair():
 
         handle.write(private_key)
 
-def create_instance():
+def create_instance(sg_id):
 
     instances = ec2_client.run_instances(
 
@@ -41,7 +41,8 @@ def create_instance():
         MinCount        = 1,
         MaxCount        = 1,
         InstanceType    = "t2.micro",
-        KeyName         = KEY_PAIR_NAME
+        KeyName         = KEY_PAIR_NAME,
+        SecurityGroupIds=[sg_id]
 
     )
 
@@ -90,17 +91,23 @@ def create_sg():
 
 def startpy():
 
-    # create_key_pair()
+    sg_id = create_sg()
 
-    # instance_id = create_instance()
+    create_key_pair()
 
-    # print(instance_id)
+    instance_id = create_instance(sg_id)
 
-    # ip_address = get_public_ip(instance_id)
+    ip_address = get_public_ip(instance_id)
 
-    # print(ip_address)
+    ssh_command = f"ssh -i {PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem ubuntu@{ip_address}.{AWS_REGION}.compute.amazonaws.com"
 
-    # sg_id = create_sg()
+    data = {
+        "instance_id"   : instance_id,
+        "ip_address"    : ip_address,
+        "ssh_command"   : ssh_command
+    }
+
+    print(data)
 
     print("Done")
 
