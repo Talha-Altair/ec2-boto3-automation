@@ -1,6 +1,7 @@
 import os
 import boto3
 from dotenv import load_dotenv
+from time import sleep
 
 load_dotenv()
 
@@ -89,6 +90,26 @@ def create_sg():
 
     return security_group_id
 
+def get_instance_state(instance_id):
+
+    Myec2 = ec2_client.describe_instances()
+
+    for pythonins in Myec2['Reservations']:
+
+        for printout in pythonins['Instances']:
+
+            # print(printout['InstanceId'])
+
+            if printout['InstanceId'] == instance_id:
+
+                state = printout['State']['Name']
+
+                print(printout['State']['Name'])
+
+            # print(printout['InstanceType'])
+
+    return state
+
 def startpy():
 
     sg_id = create_sg()
@@ -99,13 +120,17 @@ def startpy():
 
     while True:
 
-        
+        state = get_instance_state(instance_id)
 
-        break
+        if state == 'running':
+            
+            break
+
+        sleep(4)
 
     ip_address = get_public_ip(instance_id)
 
-    ssh_command = f"ssh -i {PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem ubuntu@{ip_address}.{AWS_REGION}.compute.amazonaws.com"
+    ssh_command = f'ssh -i "{PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem" ubuntu@{ip_address}.{AWS_REGION}.compute.amazonaws.com'
 
     data = {
         "instance_id"   : instance_id,
