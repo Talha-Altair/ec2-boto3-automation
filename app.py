@@ -14,6 +14,8 @@ AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
 
 AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
 
+VPC_ID = os.environ["VPC_ID"]
+
 ec2_client = boto3.client(
                         "ec2",
                         region_name= AWS_REGION,
@@ -57,6 +59,35 @@ def get_public_ip(instance_id):
 
     return ip_address
 
+def create_sg():
+
+    securitygroup = ec2_client.create_security_group(
+                                                    GroupName='tact-sg',
+                                                    Description='tact-sg',
+                                                    VpcId = VPC_ID
+                                                    )
+
+    security_group_id = securitygroup['GroupId']
+
+    ec2_client.authorize_security_group_ingress(
+        GroupId=security_group_id,
+        IpPermissions=[
+            {
+            'IpProtocol': 'tcp',
+            'FromPort': 22,
+            'ToPort': 22,
+            'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+            },
+            {
+            'IpProtocol': 'tcp',
+            'FromPort': 4500,
+            'ToPort': 4500,
+            'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+            }
+        ])
+
+    return security_group_id
+
 def startpy():
 
     # create_key_pair()
@@ -68,6 +99,8 @@ def startpy():
     # ip_address = get_public_ip(instance_id)
 
     # print(ip_address)
+
+    # sg_id = create_sg()
 
     print("Done")
 
