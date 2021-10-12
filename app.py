@@ -49,6 +49,18 @@ def create_instance(sg_id):
 
     instance_id = instances["Instances"][0]["InstanceId"]
 
+    while True:
+
+        state = get_instance_state(instance_id)
+
+        if state == 'running':
+            
+            break
+
+        sleep(4)
+
+    print("Instance Running")
+
     return instance_id
 
 def get_public_ip(instance_id):
@@ -117,16 +129,6 @@ def startpy():
     create_key_pair()
 
     instance_id = create_instance(sg_id)
-
-    while True:
-
-        state = get_instance_state(instance_id)
-
-        if state == 'running':
-            
-            break
-
-        sleep(4)
 
     ip_address = get_public_ip(instance_id)
 
