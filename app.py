@@ -2,6 +2,8 @@ import os
 import boto3
 from dotenv import load_dotenv
 from time import sleep
+import boto3
+import paramiko
 
 load_dotenv()
 
@@ -10,6 +12,8 @@ AWS_REGION = "ap-southeast-1"
 KEY_PAIR_NAME = "tact-ec2-key-pair"
 
 PEM_FILE_DIR = "./pem_files"
+
+PEM_FILE = f"{PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem"
 
 AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
 
@@ -30,7 +34,7 @@ def create_key_pair():
 
     private_key = key_pair["KeyMaterial"]
 
-    with os.fdopen(os.open(f"{PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem", os.O_WRONLY | os.O_CREAT, 0o400), "w+") as handle:
+    with os.fdopen(os.open(PEM_FILE, os.O_WRONLY | os.O_CREAT, 0o400), "w+") as handle:
 
         handle.write(private_key)
 
@@ -132,6 +136,8 @@ def startpy():
 
     ip_address = get_public_ip(instance_id)
 
+    setup_stuff(ip_address)
+
     connection_string = ip_address.replace(".","-")
 
     ssh_command = f'ssh -i "{PEM_FILE_DIR}/{KEY_PAIR_NAME}.pem" ubuntu@ec2-{connection_string}.{AWS_REGION}.compute.amazonaws.com'
@@ -145,6 +151,34 @@ def startpy():
     print(data)
 
     print("Done")
+
+def setup_stuff(instance_ip):
+
+    key = paramiko.RSAKey.from_private_key_file(PEM_FILE)
+
+    client = paramiko.SSHClient()
+
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+
+        client.connect(hostname=instance_ip, username="ubuntu", pkey=key)
+
+        with open('setup.sh', 'w') as setup:
+
+            script = setup.readlines()
+
+        for cmd in script:
+
+            stdin, stdout, stderr = client.exec_command(cmd)
+
+            print (stdout.read())
+
+        client.close()
+
+    except Exception as e:
+
+        print (e)
 
 if __name__ == '__main__':
 
